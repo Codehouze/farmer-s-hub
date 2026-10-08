@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ALLOWED_IMAGE_HOSTS } from "@/lib/image-hosts";
 
 export const registerSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters"),
@@ -20,7 +21,24 @@ export const productSchema = z.object({
   unit: z.string().trim().min(1, "Unit is required"),
   quantityAvail: z.coerce.number().min(0, "Quantity can't be negative"),
   location: z.string().trim().min(2, "Location is required"),
-  imageUrl: z.string().trim().optional().or(z.literal("")),
+  imageUrl: z
+    .string()
+    .trim()
+    .url("Image URL must be a valid URL")
+    .refine(
+      (url) => {
+        try {
+          return ALLOWED_IMAGE_HOSTS.includes(new URL(url).hostname);
+        } catch {
+          // Already-invalid URLs are reported by the .url() check above;
+          // don't let the URL constructor throw past zod here.
+          return false;
+        }
+      },
+      `Image host not allowed. Use one of: ${ALLOWED_IMAGE_HOSTS.join(", ")}`
+    )
+    .optional()
+    .or(z.literal("")),
   categoryId: z.string().trim().optional().or(z.literal("")),
   available: z.boolean().optional(),
 });

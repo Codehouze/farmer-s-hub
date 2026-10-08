@@ -2,6 +2,7 @@ import { Search } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/products/ProductCard";
 import { Button } from "@/components/ui/Button";
+import { PRODUCT_CARD_SELECT } from "@/lib/types";
 import type { Prisma } from "@/app/generated/prisma/client";
 
 export const metadata = {
@@ -41,16 +42,7 @@ export default async function ProductsPage({
   const products = await prisma.product.findMany({
     where,
     orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      price: true,
-      unit: true,
-      quantityAvail: true,
-      location: true,
-      imageUrl: true,
-      available: true,
-    },
+    select: PRODUCT_CARD_SELECT,
   });
 
   const hasFilters = Boolean(q || category || location);

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { placeOrder } from "@/lib/orders";
 
 const orderSchema = z.object({
   productId: z.string().min(1),
@@ -35,37 +35,11 @@ export async function POST(request: Request) {
 
   const { productId, quantity, note } = parsed.data;
 
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
-    select: { quantityAvail: true, available: true },
-  });
+  const result = await placeOrder(productId, session.user.id, quantity, note);
 
-  if (!product) {
-    return NextResponse.json({ error: "Product not found" }, { status: 404 });
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.code });
   }
 
-  if (!product.available) {
-    return NextResponse.json(
-      { error: "Product is not available" },
-      { status: 400 }
-    );
-  }
-
-  if (quantity > product.quantityAvail) {
-    return NextResponse.json(
-      { error: "Quantity exceeds what's available" },
-      { status: 400 }
-    );
-  }
-
-  const order = await prisma.order.create({
-    data: {
-      quantity,
-      note,
-      productId,
-      buyerId: session.user.id,
-    },
-  });
-
-  return NextResponse.json({ order }, { status: 201 });
+  return NextResponse.json({ order: result.order }, { status: 201 });
 }

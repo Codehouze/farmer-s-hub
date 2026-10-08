@@ -18,6 +18,7 @@ import { prisma } from "@/lib/prisma";
 import { LinkButton } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { ProductCard } from "@/components/products/ProductCard";
+import { PRODUCT_CARD_SELECT } from "@/lib/types";
 
 export default async function Home() {
   const [products, categories] = await Promise.all([
@@ -25,16 +26,7 @@ export default async function Home() {
       where: { available: true },
       orderBy: { createdAt: "desc" },
       take: 5,
-      select: {
-        id: true,
-        name: true,
-        price: true,
-        unit: true,
-        quantityAvail: true,
-        location: true,
-        imageUrl: true,
-        available: true,
-      },
+      select: PRODUCT_CARD_SELECT,
     }),
     prisma.category.findMany({ orderBy: { name: "asc" } }),
   ]);

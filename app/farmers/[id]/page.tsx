@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { MapPin, Phone } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/products/ProductCard";
+import { PRODUCT_CARD_SELECT } from "@/lib/types";
 
 type Params = Promise<{ id: string }>;
 
@@ -24,16 +25,7 @@ export default async function FarmerProfilePage({
       products: {
         where: { available: true },
         orderBy: { createdAt: "desc" },
-        select: {
-          id: true,
-          name: true,
-          price: true,
-          unit: true,
-          quantityAvail: true,
-          location: true,
-          imageUrl: true,
-          available: true,
-        },
+        select: PRODUCT_CARD_SELECT,
       },
     },
   });

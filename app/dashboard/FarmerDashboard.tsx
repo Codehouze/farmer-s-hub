@@ -7,17 +7,33 @@ import type { Product, Order, User } from "@/app/generated/prisma/client";
 
 type OrderWithRelations = Order & { product: Product; buyer: User };
 
+const NOTICE_MESSAGES: Record<string, string> = {
+  deleted: "Product deleted.",
+  delisted:
+    "This product has order history, so it was marked unavailable instead of deleted — its order records are preserved.",
+};
+
 export function FarmerDashboard({
   userName,
   products,
   orders,
+  notice,
+  noticeDetail,
 }: {
   userName: string;
   products: Product[];
   orders: OrderWithRelations[];
+  notice?: string;
+  noticeDetail?: string;
 }) {
   const activeProductCount = products.filter((p) => p.available).length;
   const pendingOrdersCount = orders.filter((o) => o.status === "PENDING").length;
+  const isError = notice === "status-error";
+  const noticeMessage = isError
+    ? noticeDetail || "Couldn't update that order's status."
+    : notice
+      ? NOTICE_MESSAGES[notice]
+      : undefined;
 
   return (
     <div className="mx-auto max-w-6xl space-y-10 px-4 py-10 sm:px-6 lg:px-8">
@@ -25,6 +41,16 @@ export function FarmerDashboard({
         <h1 className="text-2xl font-bold text-primary">Welcome back, {userName}</h1>
         <p className="text-sm text-muted">Manage your products and track incoming orders.</p>
       </div>
+
+      {noticeMessage && (
+        <p
+          className={`rounded-md px-4 py-3 text-sm font-medium ${
+            isError ? "bg-red-50 text-red-700" : "bg-accent/15 text-primary-dark"
+          }`}
+        >
+          {noticeMessage}
+        </p>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Active products" value={activeProductCount} />

@@ -2,8 +2,8 @@
 
 import { z } from "zod";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { placeOrder as placeOrderInDb } from "@/lib/orders";
 
 const orderSchema = z.object({
   quantity: z.coerce.number().positive("Quantity must be greater than 0"),
@@ -26,27 +26,17 @@ export async function placeOrder(productId: string, formData: FormData) {
     redirect(`/products/${productId}?error=invalid`);
   }
 
-  const product = await prisma.product.findUnique({
-    where: { id: productId },
-    select: { quantityAvail: true, available: true },
-  });
+  const result = await placeOrderInDb(
+    productId,
+    session.user.id,
+    parsed.data.quantity,
+    parsed.data.note
+  );
 
-  if (!product || !product.available) {
-    redirect(`/products/${productId}?error=unavailable`);
+  if (!result.ok) {
+    const errorParam = result.code === 404 ? "unavailable" : "exceeds";
+    redirect(`/products/${productId}?error=${errorParam}`);
   }
-
-  if (parsed.data.quantity > product.quantityAvail) {
-    redirect(`/products/${productId}?error=exceeds`);
-  }
-
-  await prisma.order.create({
-    data: {
-      quantity: parsed.data.quantity,
-      note: parsed.data.note,
-      productId,
-      buyerId: session.user.id,
-    },
-  });
 
   redirect(`/products/${productId}?ordered=1`);
 }

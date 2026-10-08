@@ -22,7 +22,11 @@ export async function updateOrderStatusAction(orderId: string, formData: FormDat
   }
 
   const status = String(formData.get("status") || "");
-  await setOrderStatus(orderId, session.user.id, status);
+  const result = await setOrderStatus(orderId, session.user.id, status);
 
   revalidatePath("/dashboard");
+
+  if (!result.ok) {
+    redirect(`/dashboard?notice=status-error&detail=${encodeURIComponent(result.error)}`);
+  }
 }

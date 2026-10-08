@@ -117,8 +117,22 @@ export async function deleteProductAction(productId: string) {
     redirect("/dashboard");
   }
 
+  const orderCount = await prisma.order.count({ where: { productId } });
+
+  if (orderCount > 0) {
+    // This product has order history (a buyer's or the farmer's own
+    // records) - deleting it would cascade-fail at the DB level, so
+    // delist it instead of destroying that history.
+    await prisma.product.update({
+      where: { id: productId },
+      data: { available: false },
+    });
+    revalidatePath("/dashboard");
+    redirect("/dashboard?notice=delisted");
+  }
+
   await prisma.product.delete({ where: { id: productId } });
 
   revalidatePath("/dashboard");
-  redirect("/dashboard");
+  redirect("/dashboard?notice=deleted");
 }

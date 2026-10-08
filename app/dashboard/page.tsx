@@ -4,12 +4,20 @@ import { prisma } from "@/lib/prisma";
 import { FarmerDashboard } from "./FarmerDashboard";
 import { BuyerDashboard } from "./BuyerDashboard";
 
-export default async function DashboardPage() {
+type SearchParams = Promise<{ notice?: string; detail?: string }>;
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const session = await auth();
 
   if (!session?.user) {
     redirect("/login?callbackUrl=/dashboard");
   }
+
+  const { notice, detail } = await searchParams;
 
   if (session.user.role === "FARMER") {
     const [products, orders] = await Promise.all([
@@ -29,6 +37,8 @@ export default async function DashboardPage() {
         userName={session.user.name ?? "Farmer"}
         products={products}
         orders={orders}
+        notice={notice}
+        noticeDetail={detail}
       />
     );
   }
