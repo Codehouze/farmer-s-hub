@@ -1,8 +1,12 @@
 import { PrismaClient } from "@/app/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 
-const adapter = new PrismaBetterSqlite3({
+// DATABASE_URL is a libsql:// URL (with TURSO_AUTH_TOKEN set) against a
+// hosted Turso database in production, or a local file:./... URL in dev -
+// the adapter and client code are identical either way.
+const adapter = new PrismaLibSql({
   url: process.env.DATABASE_URL!,
+  authToken: process.env.TURSO_AUTH_TOKEN,
 });
 
 const globalForPrisma = globalThis as unknown as {
