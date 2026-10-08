@@ -35,11 +35,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        return token;
       }
+
+      // Re-check the DB on every subsequent request instead of trusting the
+      // role baked into the token at sign-in. Otherwise a role change
+      // (demotion, ban) or account deletion has no effect until the JWT
+      // expires (30 days by default) - the user keeps acting on stale
+      // permissions for the rest of its lifetime.
+      const current = await prisma.user.findUnique({
+        where: { id: token.id as string },
+        select: { role: true },
+      });
+
+      if (!current) {
+        // Account no longer exists - invalidate the session.
+        return null;
+      }
+
+      token.role = current.role;
       return token;
     },
     session({ session, token }) {
