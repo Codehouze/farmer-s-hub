@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #1a2e1a;
+
+  /* Agri Hub green palette */
+  --color-primary: #1b5e2e;
+  --color-primary-dark: #123f1f;
+  --color-primary-light: #2f8f4e;
+  --color-accent: #3fa535;
+  --color-cream: #f7f5ef;
+  --color-cream-dark: #efece1;
+  --color-muted: #6b7a6c;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--color-primary);
+  --color-primary-dark: var(--color-primary-dark);
+  --color-primary-light: var(--color-primary-light);
+  --color-accent: var(--color-accent);
+  --color-cream: var(--color-cream);
+  --color-cream-dark: var(--color-cream-dark);
+  --color-muted: var(--color-muted);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}

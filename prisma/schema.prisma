@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  FARMER
+  BUYER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  passwordHash  String
+  role          Role      @default(BUYER)
+  phone         String?
+  location      String?
+  companyName   String?
+  bio           String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  products      Product[]
+  ordersPlaced  Order[]   @relation("BuyerOrders")
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  slug     String    @unique
+  products Product[]
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  price           Float
+  unit            String   @default("kg")
+  quantityAvail   Float
+  location        String
+  imageUrl        String?
+  available       Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  farmerId        String
+  farmer          User     @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+
+  categoryId      String?
+  category        Category? @relation(fields: [categoryId], references: [id])
+
+  orders          Order[]
+
+  @@index([farmerId])
+  @@index([categoryId])
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  quantity    Float
+  status      OrderStatus @default(PENDING)
+  note        String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  productId   String
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  buyerId     String
+  buyer       User        @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([buyerId])
+}
