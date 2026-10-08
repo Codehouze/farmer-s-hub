@@ -47,3 +47,10 @@ next-env.d.ts
 /prisma/*.db-journal
 *.db
 *.db-journal
+
+# AI agent reference docs auto-installed by `prisma init`/`prisma generate`
+/.agents
+/.claude/skills
+/.windsurf
+/skills-lock.json
+/AGENTS.md
