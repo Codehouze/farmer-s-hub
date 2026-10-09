@@ -1,12 +1,11 @@
 import { PrismaClient } from "@/app/generated/prisma/client";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-// DATABASE_URL is a libsql:// URL (with TURSO_AUTH_TOKEN set) against a
-// hosted Turso database in production, or a local file:./... URL in dev -
-// the adapter and client code are identical either way.
-const adapter = new PrismaLibSql({
-  url: process.env.DATABASE_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN,
+// DATABASE_URL is a postgres:// connection string - Vercel's Prisma Postgres
+// marketplace integration wires this up automatically for Preview/Production,
+// and local dev uses the same hosted database (see .env).
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL!,
 });
 
 const globalForPrisma = globalThis as unknown as {
