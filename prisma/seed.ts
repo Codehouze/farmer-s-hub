@@ -108,6 +108,18 @@ async function main() {
     },
   });
 
+  await prisma.user.upsert({
+    where: { email: "admin@farmershub.rw" },
+    update: {},
+    create: {
+      name: "Platform Admin",
+      email: "admin@farmershub.rw",
+      passwordHash,
+      role: "ADMIN",
+      location: "Kigali",
+    },
+  });
+
   const products = [
     {
       name: "Tomatoes",

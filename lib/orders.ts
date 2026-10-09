@@ -86,10 +86,6 @@ export async function setOrderStatus(
   farmerId: string,
   status: string
 ): Promise<SetOrderStatusResult> {
-  if (!ORDER_STATUSES.includes(status as OrderStatus)) {
-    return { ok: false, error: "Invalid status", code: 400 };
-  }
-
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: { product: true },
@@ -103,17 +99,46 @@ export async function setOrderStatus(
     return { ok: false, error: "You do not own the product for this order", code: 403 };
   }
 
-  if (!ALLOWED_STATUS_TRANSITIONS[order.status].includes(status as OrderStatus)) {
+  return applyStatusTransition(order.id, order.status, status);
+}
+
+/**
+ * Admin variant of setOrderStatus - same forward-only state machine, but
+ * skips the farmer-ownership check since an admin isn't the product's owner.
+ */
+export async function adminSetOrderStatus(
+  orderId: string,
+  status: string
+): Promise<SetOrderStatusResult> {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+
+  if (!order) {
+    return { ok: false, error: "Order not found", code: 404 };
+  }
+
+  return applyStatusTransition(order.id, order.status, status);
+}
+
+async function applyStatusTransition(
+  orderId: string,
+  currentStatus: OrderStatus,
+  nextStatus: string
+): Promise<SetOrderStatusResult> {
+  if (!ORDER_STATUSES.includes(nextStatus as OrderStatus)) {
+    return { ok: false, error: "Invalid status", code: 400 };
+  }
+
+  if (!ALLOWED_STATUS_TRANSITIONS[currentStatus].includes(nextStatus as OrderStatus)) {
     return {
       ok: false,
-      error: `Cannot change status from ${order.status} to ${status}`,
+      error: `Cannot change status from ${currentStatus} to ${nextStatus}`,
       code: 400,
     };
   }
 
   const updated = await prisma.order.update({
     where: { id: orderId },
-    data: { status: status as OrderStatus },
+    data: { status: nextStatus as OrderStatus },
   });
 
   return { ok: true, order: updated };
